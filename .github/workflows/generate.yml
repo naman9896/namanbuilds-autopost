@@ -1,0 +1,80 @@
+name: Generate tomorrow's reels
+
+on:
+  schedule:
+    - cron: "0 7 * * *"   # 07:00 UTC = 6 pm Sydney in summer (AEDT), 5 pm in winter (AEST)
+  workflow_dispatch:
+    inputs:
+      only_page:
+        description: "Notion page ID to (re)generate right now (leave empty for the normal run)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: autopost-generate
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: System packages and fonts
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libcairo2-dev pkg-config ffmpeg fontconfig
+          mkdir -p ~/.local/share/fonts && cp fonts/*.ttf ~/.local/share/fonts/ && fc-cache -f
+
+      - name: Python packages
+        run: pip install -r requirements.txt
+
+      - name: Voice model cache
+        uses: actions/cache@v4
+        with:
+          path: ~/models
+          key: kokoro-v1.0
+
+      - name: Download voice model if missing
+        run: |
+          mkdir -p ~/models && cd ~/models
+          [ -s kokoro-v1.0.onnx ] || curl -sSL -o kokoro-v1.0.onnx https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx
+          [ -s voices-v1.0.bin ] || curl -sSL -o voices-v1.0.bin https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin
+
+      - name: Work out the public video address
+        run: echo "PAGES_BASE=https://${GITHUB_REPOSITORY_OWNER,,}.github.io/${GITHUB_REPOSITORY#*/}" >> "$GITHUB_ENV"
+
+      - name: Write scripts and render videos
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DB: ${{ vars.NOTION_DB || 'bba18f84174c4357a20d8fd9c2fed3ed' }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CLAUDE_MODEL: ${{ vars.CLAUDE_MODEL || 'claude-sonnet-5-5' }}
+          AUTO_APPROVE: ${{ vars.AUTO_APPROVE || 'false' }}
+          ONLY_PAGE: ${{ inputs.only_page }}
+          MODEL_DIR: /home/runner/models
+        run: python -m autopost.run_generate
+
+      - name: Publish videos to the public site (gh-pages branch)
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash scripts/push_media.sh
+
+      - name: Keep the scripts and videos as a download
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reels-${{ github.run_id }}
+          path: out/
+          if-no-files-found: ignore
+          retention-days: 14

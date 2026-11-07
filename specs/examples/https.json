@@ -1,0 +1,23 @@
+{"topic": "HTTP vs HTTPS", "speed": 1.08, "scenes": [
+ {"type": "hook", "vo": "Is this website safe to type your password into? Check for one tiny thing.",
+  "a": ["IS THIS SITE", "SAFE?"], "b": ["CHECK FOR", "ONE THING"], "icon": "lock", "swap_cue": "Check", "accent_a": "coral", "accent_b": "green"},
+ {"type": "compare", "title": "HTTP vs HTTPS",
+  "vo": "HTTP is like sending a postcard. Anyone along the way can read it. HTTPS is a sealed envelope. Only the website can open it.",
+  "left": {"name": "HTTP", "icon": "postcard", "color": "coral", "point": "Anyone can read it", "badge": "x", "cue": "HTTP is", "badge_cue": "Anyone"},
+  "right": {"name": "HTTPS", "icon": "envelope", "color": "green", "point": "Only the website can open it", "badge": "check", "cue": "HTTPS is", "badge_cue": "Only"}},
+ {"type": "flow", "title": "ENCRYPTION", "sub": "= scrambled on the way", "color": "green",
+  "vo": "Your password gets scrambled before it leaves your phone, so a hacker in the middle only sees gibberish.",
+  "nodes": [{"icon": "phone", "label": "You", "color": "cyan", "pos": [180, 1120]},
+            {"icon": "hacker", "label": "Hacker", "color": "coral", "pos": [540, 720], "cue": "hacker"},
+            {"icon": "server", "label": "Website", "color": "green", "pos": [900, 1120]}],
+  "links": [[0, 2]],
+  "packets": [{"frm": 0, "to": 2, "label": "MyP@ss123", "label2": "x9#Qz!7&", "cue": "scrambled", "color": "cyan", "color2": "green", "lane": 0},
+              {"frm": 0, "to": 2, "label": "x9#Qz!7&", "cue": "middle", "color": "green", "lane": 0}],
+  "bubbles": [{"node": 1, "text": "???", "cue": "gibberish", "color": "coral", "dx": 190, "dy": -40}]},
+ {"type": "list", "title": "THE RULE", "color": "green",
+  "vo": "Before you type a password or card number, check for the padlock and https in the address bar.",
+  "items": [{"icon": "card", "text": "Typing a password or card?", "cue": "password", "color": "coral"},
+            {"icon": "lock", "text": "Look for the padlock", "cue": "padlock", "color": "green"},
+            {"icon": "browser", "text": "and https:// in the address bar", "cue": "https", "color": "cyan"}]},
+ {"type": "cta", "vo": "Follow for more tech, made simple.", "next": "What is an API?"}
+]}

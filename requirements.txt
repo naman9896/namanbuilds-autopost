@@ -1,0 +1,6 @@
+pycairo>=1.26
+numpy
+scipy
+soundfile
+kokoro-onnx>=0.4
+requests

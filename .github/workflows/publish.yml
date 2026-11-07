@@ -1,0 +1,31 @@
+name: Post due reels
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"   # checks every 30 minutes; GitHub may run it a few minutes late
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: autopost-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -q requests
+      - name: Post approved reels whose time has come
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DB: ${{ vars.NOTION_DB || 'bba18f84174c4357a20d8fd9c2fed3ed' }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+        run: python -m autopost.run_publish
