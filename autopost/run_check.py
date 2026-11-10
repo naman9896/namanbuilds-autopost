@@ -2,7 +2,11 @@
 import os, sys
 import requests
 
-from . import notion, instagram, writer
+from . import notion, instagram
+
+# Kept here (not imported from writer.py) so this check only needs 'requests'.
+API_URL = "https://api.anthropic.com/v1/messages"
+MODEL = os.environ.get("CLAUDE_MODEL", "claude-sonnet-5-5")
 
 NEEDED = ["Topic", "Post Date", "Format", "Status", "Hook", "Caption", "Approved", "Video URL", "Instagram URL", "Automation Log"]
 
@@ -26,11 +30,11 @@ def notion_ok():
 
 
 def claude_ok():
-    r = requests.post(writer.API_URL, timeout=60, headers={
+    r = requests.post(API_URL, timeout=60, headers={
         "x-api-key": os.environ["ANTHROPIC_API_KEY"], "anthropic-version": "2023-06-01", "content-type": "application/json"},
-        json={"model": writer.MODEL, "max_tokens": 5, "messages": [{"role": "user", "content": "Reply OK"}]})
+        json={"model": MODEL, "max_tokens": 5, "messages": [{"role": "user", "content": "Reply OK"}]})
     if r.status_code != 200: raise RuntimeError(f"{r.status_code}: {r.text[:300]}")
-    return f"key works with model {writer.MODEL}"
+    return f"key works with model {MODEL}"
 
 
 def instagram_ok():
